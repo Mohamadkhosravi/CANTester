@@ -68,6 +68,8 @@ namespace kt08::msg
         float instantVehicleSpeedKph() const { return f_.s.instantVehicleSpeed * 0.125f; }
         void setInstantVehicleSpeedKph(float k) { f_.s.instantVehicleSpeed = (uint16_t)(k / 0.125f) & 0xFFF; }
 
+
+
         const Frame &frame() const { return f_; }
 
     private:

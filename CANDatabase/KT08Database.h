@@ -2,7 +2,7 @@
 
 #include "ICANDatabase.h"
 
-// --- فایل‌های HighSpeed ---
+// ---  HighSpeed ---
 #include "CANDatabase/CANMessages_HIGH_SPEED/BCM_4.h"
 #include "CANDatabase/CANMessages_HIGH_SPEED/BCM_5.h"
 #include "CANDatabase/CANMessages_HIGH_SPEED/EMS_3.h"
@@ -10,7 +10,7 @@
 #include "CANDatabase/CANMessages_HIGH_SPEED/HCU_10.h"
 #include "CANDatabase/CANMessages_HIGH_SPEED/HVAC_1.h"
 
-// --- فایل‌های LowSpeed ---
+// ---  LowSpeed ---
 #include "CANDatabase/CANMessages_LOW_SPEED/HvacInfo1.h"
 #include "CANDatabase/CANMessages_LOW_SPEED/HvacInfo2.h"
 #include "CANDatabase/CANMessages_LOW_SPEED/HvacInfo3.h"
@@ -48,15 +48,11 @@ public:
     };
 
     Kt08Database();
-
-    // تعیین نوع شبکه فعال در زمان اجرا
     void setBusType(CanBusType type) { m_busType = type; }
     CanBusType busType() const { return m_busType; }
-
-    // جستجوی پیام بر اساس ID و نوع شبکه فعال
     ccl::msg::ICanMessage* find(std::uint32_t canId) const;
 
-    // --- دسترسی به پیام‌های High-Speed ---
+    //  High-Speed ---
     Hvac1& hvac1() { return m_hvac1; }
     Hcu1&  hcu1()  { return m_hcu1; }
     Hcu10& hcu10() { return m_hcu10; }
@@ -64,7 +60,7 @@ public:
     Bcm4&  bcm4()  { return m_bcm4; }
     Bcm5&  bcm5()  { return m_bcm5; }
 
-    // --- دسترسی به پیام‌های Low-Speed ---
+    // --- Low-Speed ---
     BcmNtwrk&     bcmNtwrk()     { return m_bcmNtwrk; }
     HvacInfo1&    hvacInfo1()    { return m_hvacInfo1; }
     BcmInfo2&     bcmInfo2()     { return m_bcmInfo2; }
@@ -84,7 +80,7 @@ public:
 private:
     CanBusType m_busType{CanBusType::HighSpeed};
 
-    // اشیاء High-Speed
+    //  High-Speed
     Hvac1 m_hvac1{};
     Hcu1  m_hcu1{};
     Hcu10 m_hcu10{};
@@ -92,7 +88,7 @@ private:
     Bcm4  m_bcm4{};
     Bcm5  m_bcm5{};
 
-    // اشیاء Low-Speed
+    //  Low-Speed
     BcmNtwrk     m_bcmNtwrk{};
     HvacInfo1    m_hvacInfo1{};
     BcmInfo2     m_bcmInfo2{};
@@ -109,7 +105,6 @@ private:
     HvacPrmAns   m_hvacPrmAns{};
     BcmAtcParReq m_bcmAtcParReq{};
 
-    // آرایه‌های جدول جستجو (مرتب شده بر اساس ID)
     std::array<Entry, 6>  m_hsLookup;
     std::array<Entry, 15> m_lsLookup;
 };

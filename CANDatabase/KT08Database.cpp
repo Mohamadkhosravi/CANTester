@@ -5,7 +5,7 @@
 namespace kt08::msg
 {
     Kt08Database::Kt08Database()
-        // مقداردهی اولیه جدول High-Speed (مرتب‌شده صعودی بر اساس ID)
+
         : m_hsLookup{{
             {Hvac1::kId, &m_hvac1}, // 0x086
             {Hcu1::kId,  &m_hcu1},  // 0x201
@@ -14,7 +14,7 @@ namespace kt08::msg
             {Bcm5::kId,  &m_bcm5},  // 0x601
             {Bcm4::kId,  &m_bcm4}   // 0x602
           }},
-          // مقداردهی اولیه جدول Low-Speed (مرتب‌شده صعودی بر اساس ID)
+
           m_lsLookup{{
             {BcmNtwrk::kId,     &m_bcmNtwrk},     // 0x028
             {HvacInfo1::kId,    &m_hvacInfo1},    // 0x086
@@ -33,7 +33,7 @@ namespace kt08::msg
             {BcmAtcParReq::kId, &m_bcmAtcParReq}  // 0x6AC
           }}
     {
-        // چک کردن مرتب بودن آرایه‌ها برای Binary Search
+
         assert(std::is_sorted(m_hsLookup.begin(), m_hsLookup.end(),
                                [](const Entry &a, const Entry &b) { return a.id < b.id; }) &&
                "Kt08Database HighSpeed lookup must be sorted");
