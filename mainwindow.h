@@ -17,7 +17,7 @@
 #include <QLibrary>
 #include <QDir>
 #include <windows.h>
-#include "Kt08Database.h"
+#include "KT08Database.h"
 #include <QCoreApplication>
 // ۱. ساختارهای مربوط به ControlCAN API
 #include <QDir>

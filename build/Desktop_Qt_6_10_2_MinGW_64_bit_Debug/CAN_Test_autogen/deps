@@ -894,17 +894,33 @@ CAN_Test_autogen/timestamp: \
 	C:/Qt/Tools/mingw1310_64/x86_64-w64-mingw32/include/wow64apiset.h \
 	C:/Qt/Tools/mingw1310_64/x86_64-w64-mingw32/include/wtypes.h \
 	C:/Qt/Tools/mingw1310_64/x86_64-w64-mingw32/include/wtypesbase.h \
-	D:/Development/CAN_Test/BCM_4.h \
-	D:/Development/CAN_Test/BCM_5.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_HIGH_SPEED/BCM_4.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_HIGH_SPEED/BCM_5.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_HIGH_SPEED/EMS_3.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_HIGH_SPEED/HCU_1.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_HIGH_SPEED/HCU_10.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_HIGH_SPEED/HVAC_1.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/BcmAtcAck.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/BcmAtcParReq.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/BcmInfo19.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/BcmInfo2.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/BcmInfo20.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/BcmInfo4.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/BcmInfo5.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/BcmNtwrk.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/HvacFlt.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/HvacInfo1.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/HvacInfo2.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/HvacInfo3.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/HvacPrmAns.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/HvacSup.h \
+	D:/Development/CAN_Test/CANDatabase/CANMessages_LOW_SPEED/MmsInfo3.h \
+	D:/Development/CAN_Test/CANDatabase/ICANDatabase.h \
+	D:/Development/CAN_Test/CANDatabase/ICanMessage.h \
+	D:/Development/CAN_Test/CANDatabase/KT08Database.cpp \
+	D:/Development/CAN_Test/CANDatabase/KT08Database.h \
+	D:/Development/CAN_Test/CANDatabase/Kt08Database.h \
 	D:/Development/CAN_Test/CMakeLists.txt \
-	D:/Development/CAN_Test/EMS_3.h \
-	D:/Development/CAN_Test/HCU_1.h \
-	D:/Development/CAN_Test/HCU_10.h \
-	D:/Development/CAN_Test/HVAC_1.h \
-	D:/Development/CAN_Test/ICANDatabase.h \
-	D:/Development/CAN_Test/ICanMessage.h \
-	D:/Development/CAN_Test/KT08Database.cpp \
-	D:/Development/CAN_Test/KT08Database.h \
 	D:/Development/CAN_Test/build/Desktop_Qt_6_10_2_MinGW_64_bit_Debug/.qtcreator/cmake-helper/maintenance_tool_provider.cmake \
 	D:/Development/CAN_Test/build/Desktop_Qt_6_10_2_MinGW_64_bit_Debug/.qtcreator/cmake-helper/package-manager.cmake \
 	D:/Development/CAN_Test/build/Desktop_Qt_6_10_2_MinGW_64_bit_Debug/.qtcreator/cmake-helper/qtcreator-project.cmake \

@@ -12,29 +12,37 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
-set(PROJECT_SOURCES
-        main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
-        BCM_4.h
-        BCM_5.h
-        HCU_1.h
-        HCU_10.h
-        EMS_3.h
-        HVAC_1.h
-        KT08Database.cpp
-        KT08Database.h      
-        ICanMessage.h
-        ICANDatabase.h
+# 1. پیدا کردن خودکار تمام فایل‌های داخل پوشه‌های HighSpeed و LowSpeed
+file(GLOB HIGH_SPEED_SOURCES "CANDatabase/HighSpeed/*.h" "CANDatabase/HighSpeed/*.cpp")
+file(GLOB LOW_SPEED_SOURCES "CANDatabase/LowSpeed/*.h" "CANDatabase/LowSpeed/*.cpp")
+file(GLOB CAN_DB_COMMON "CANDatabase/*.h" "CANDatabase/*.cpp")
 
+# 2. فایل‌های اصلی ریشه پروژه
+set(PROJECT_SOURCES
+    main.cpp
+    mainwindow.cpp
+    mainwindow.h
+    mainwindow.ui
+    ${CAN_DB_COMMON}
+    ${HIGH_SPEED_SOURCES}
+    ${LOW_SPEED_SOURCES}
 )
+
+# 3. تعریف Executable با تمام فایل‌ها
 qt_add_executable(CAN_Test
     MANUAL_FINALIZATION
     ${PROJECT_SOURCES}
 )
 
-target_include_directories(CAN_Test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+# 4. معرفی مسیرهای Include تا هدرها بدون نیاز به نوشتن مسیر نسبی در #include شناخته شوند
+target_include_directories(CAN_Test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/CANDatabase
+    ${CMAKE_CURRENT_SOURCE_DIR}/CANDatabase/HighSpeed
+    ${CMAKE_CURRENT_SOURCE_DIR}/CANDatabase/LowSpeed
+)
+
+# 5. لینک کردن کتابخانه‌های Qt
 target_link_libraries(CAN_Test PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
 )

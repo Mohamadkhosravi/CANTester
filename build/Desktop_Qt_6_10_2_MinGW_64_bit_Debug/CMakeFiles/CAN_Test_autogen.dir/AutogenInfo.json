@@ -324,57 +324,21 @@
 	"HEADERS" : 
 	[
 		[
-			"D:/Development/CAN_Test/BCM_4.h",
+			"D:/Development/CAN_Test/CANDatabase/ICANDatabase.h",
 			"MU",
-			"EWIEGA46WW/moc_BCM_4.cpp",
+			"QO7PME5XXJ/moc_ICANDatabase.cpp",
 			null
 		],
 		[
-			"D:/Development/CAN_Test/BCM_5.h",
+			"D:/Development/CAN_Test/CANDatabase/ICanMessage.h",
 			"MU",
-			"EWIEGA46WW/moc_BCM_5.cpp",
+			"QO7PME5XXJ/moc_ICanMessage.cpp",
 			null
 		],
 		[
-			"D:/Development/CAN_Test/EMS_3.h",
+			"D:/Development/CAN_Test/CANDatabase/Kt08Database.h",
 			"MU",
-			"EWIEGA46WW/moc_EMS_3.cpp",
-			null
-		],
-		[
-			"D:/Development/CAN_Test/HCU_1.h",
-			"MU",
-			"EWIEGA46WW/moc_HCU_1.cpp",
-			null
-		],
-		[
-			"D:/Development/CAN_Test/HCU_10.h",
-			"MU",
-			"EWIEGA46WW/moc_HCU_10.cpp",
-			null
-		],
-		[
-			"D:/Development/CAN_Test/HVAC_1.h",
-			"MU",
-			"EWIEGA46WW/moc_HVAC_1.cpp",
-			null
-		],
-		[
-			"D:/Development/CAN_Test/ICANDatabase.h",
-			"MU",
-			"EWIEGA46WW/moc_ICANDatabase.cpp",
-			null
-		],
-		[
-			"D:/Development/CAN_Test/ICanMessage.h",
-			"MU",
-			"EWIEGA46WW/moc_ICanMessage.cpp",
-			null
-		],
-		[
-			"D:/Development/CAN_Test/KT08Database.h",
-			"MU",
-			"EWIEGA46WW/moc_KT08Database.cpp",
+			"QO7PME5XXJ/moc_Kt08Database.cpp",
 			null
 		],
 		[
@@ -411,6 +375,9 @@
 	"MOC_INCLUDES" : 
 	[
 		"D:/Development/CAN_Test",
+		"D:/Development/CAN_Test/CANDatabase",
+		"D:/Development/CAN_Test/CANDatabase/HighSpeed",
+		"D:/Development/CAN_Test/CANDatabase/LowSpeed",
 		"C:/Qt/6.10.2/mingw_64/include/QtCore",
 		"C:/Qt/6.10.2/mingw_64/include",
 		"C:/Qt/6.10.2/mingw_64/mkspecs/win32-g++",
@@ -456,7 +423,7 @@
 	"SETTINGS_FILE" : "D:/Development/CAN_Test/build/Desktop_Qt_6_10_2_MinGW_64_bit_Debug/CMakeFiles/CAN_Test_autogen.dir/AutogenUsed.txt",
 	"SOURCES" : 
 	[
-		[ "D:/Development/CAN_Test/KT08Database.cpp", "MU", null ],
+		[ "D:/Development/CAN_Test/CANDatabase/KT08Database.cpp", "MU", null ],
 		[ "D:/Development/CAN_Test/main.cpp", "MU", null ],
 		[ "D:/Development/CAN_Test/mainwindow.cpp", "MU", null ]
 	],

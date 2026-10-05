@@ -1,4 +1,10 @@
 #include "mainwindow.h"
+#include <QCoreApplication>
+#include <QFileInfo>
+#include <QMessageBox>
+#include <QDebug>
+#include <QHeaderView>
+#include <array>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -335,9 +341,6 @@ bool MainWindow::loadControlCanDll()
 
     // --------------------------------------------------------
     // Enumerate USB-CAN devices
-    //
-    // IMPORTANT:
-    // DLL must already be loaded before resolve/call.
     // --------------------------------------------------------
 
     if (fnFindUsbDevice2) {
@@ -360,12 +363,12 @@ bool MainWindow::loadControlCanDll()
 
                 qDebug() << "Serial:"
                          << QByteArray(
-                                devices[i].str_Serial_Num,
+                                reinterpret_cast<const char*>(devices[i].str_Serial_Num),
                                 20);
 
                 qDebug() << "Hardware:"
                          << QByteArray(
-                                devices[i].str_hw_Type,
+                                reinterpret_cast<const char*>(devices[i].str_hw_Type),
                                 40);
 
                 qDebug() << "CAN channels:"
