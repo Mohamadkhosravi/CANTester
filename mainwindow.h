@@ -21,10 +21,44 @@
 #include <QCoreApplication>
 // ۱. ساختارهای مربوط به ControlCAN API
 #include <QDir>
+
+#define VCI_USBCAN1 3
+#define VCI_USBCAN2 4
+#define VCI_USBCAN2A 4
+
+
+
+#pragma pack(push, 1)
+
+
+
+#pragma pack(pop)
+
 typedef DWORD (*VCI_OpenDevice_t)(DWORD, DWORD, DWORD);
 typedef DWORD (*VCI_CloseDevice_t)(DWORD, DWORD);
 typedef DWORD (*VCI_InitCAN_t)(DWORD, DWORD, DWORD, void*);
 typedef DWORD (*VCI_StartCAN_t)(DWORD, DWORD, DWORD);
+
+
+#pragma pack(push, 1)
+
+typedef struct
+{
+    USHORT hw_Version;
+    USHORT fw_Version;
+    USHORT dr_Version;
+    USHORT in_Version;
+    USHORT irq_Num;
+    BYTE can_Num;
+    CHAR str_Serial_Num[20];
+    CHAR str_hw_Type[40];
+    USHORT Reserved[4];
+} VCI_BOARD_INFO;
+
+#pragma pack(pop)
+
+
+
 
 
 #pragma pack(push, 1)
@@ -57,6 +91,13 @@ typedef DWORD (WINAPI *pfnVCI_InitCAN)(DWORD DevType, DWORD DevIndex, DWORD CANI
 typedef DWORD (WINAPI *pfnVCI_StartCAN)(DWORD DevType, DWORD DevIndex, DWORD CANIndex);
 typedef ULONG (WINAPI *pfnVCI_Transmit)(DWORD DevType, DWORD DevIndex, DWORD CANIndex, VCI_CAN_OBJ* pSend, ULONG Len);
 typedef ULONG (WINAPI *pfnVCI_Receive)(DWORD DevType, DWORD DevIndex, DWORD CANIndex, VCI_CAN_OBJ* pReceive, ULONG Len, INT WaitTime);
+
+typedef DWORD (WINAPI *pfnVCI_FindUsbDevice2)(VCI_BOARD_INFO* pInfo);
+
+typedef DWORD (WINAPI *pfnVCI_ReadBoardInfo)(
+    DWORD DevType,
+    DWORD DevIndex,
+    VCI_BOARD_INFO* pInfo);
 
 class MainWindow : public QMainWindow
 {
