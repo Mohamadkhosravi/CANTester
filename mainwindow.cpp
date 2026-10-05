@@ -604,61 +604,31 @@ void MainWindow::closeCanDevice()
 
 void MainWindow::sendCyclicMessages()
 {
-    if (!m_isConnected) {
-        return;
-    }
+    if (!m_isConnected) return;
 
     std::array<uint8_t, 8> buffer{};
 
     // BCM_4
-    m_db.bcm4().setStartSwitchStatus(
-        m_startSwitchCombo->currentIndex());
-
+    m_db.bcm4().setStartSwitchStatus(m_startSwitchCombo->currentIndex());
     m_db.bcm4().encode(buffer);
-
-    sendCanFrame(
-        m_db.bcm4().kId,
-        buffer,
-        m_db.bcm4().kDlc);
+    sendCanFrame(m_db.bcm4().kId, buffer, m_db.bcm4().kDlc);
 
     // BCM_5
-    m_db.bcm5().setAmbientTempDegC(
-        m_ambientTempSpin->value());
-
+    m_db.bcm5().setAmbientTempDegC(m_ambientTempSpin->value());
     m_db.bcm5().encode(buffer);
-
-    sendCanFrame(
-        m_db.bcm5().kId,
-        buffer,
-        m_db.bcm5().kDlc);
+    sendCanFrame(m_db.bcm5().kId, buffer, m_db.bcm5().kDlc);
 
     // EMS_3
-    // m_db.ems3().setEngineCoolantTempDegC(
-    //     m_coolantTempSpin->value());
-
+    m_db.ems3().setEngineCoolantTempDegC(m_coolantTempSpin->value());
     m_db.ems3().encode(buffer);
-
-    sendCanFrame(
-        m_db.ems3().kId,
-        buffer,
-        m_db.ems3().kDlc);
+    sendCanFrame(m_db.ems3().kId, buffer, m_db.ems3().kDlc);
 
     // HCU_10
-    // m_db.hcu10().setOutGasPressure(
-    //     m_outGasPressureSpin->value());
-
-    // m_db.hcu10().setCompressorActualSpeed(
-    //     m_compressorSpeedSpin->value());
-
-    // m_db.hcu10().setAcRequestStatus(
-    //     m_acReqStatusCheck->isChecked());
-
+    m_db.hcu10().setOutGasPressure(m_outGasPressureSpin->value());
+    m_db.hcu10().setCompressorActualSpeed(m_compressorSpeedSpin->value());
+    m_db.hcu10().setAcRequestStatus(m_acReqStatusCheck->isChecked());
     m_db.hcu10().encode(buffer);
-
-    sendCanFrame(
-        m_db.hcu10().kId,
-        buffer,
-        m_db.hcu10().kDlc);
+    sendCanFrame(m_db.hcu10().kId, buffer, m_db.hcu10().kDlc);
 }
 
 

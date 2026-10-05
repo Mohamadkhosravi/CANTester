@@ -56,6 +56,11 @@ namespace kt08::msg
             std::memcpy(f_.raw, b.data(), len < kDlc ? len : kDlc);
         }
 
+        //Setters
+        void setOutGasPressure(int8_t pressureBar) {  f_.s.outGasPressure = pressureBar;}
+        void setCompressorActualSpeed(uint16_t speedRpm) {   f_.s.compressorActualSpeed = speedRpm;}
+        void setAcRequestStatus(bool active) { f_.s.acRequestStatus = active ? 1 : 0;}
+
         // Getters
         uint8_t outGasPressure() const { return f_.s.outGasPressure; }
         uint8_t inGasPressure() const { return f_.s.inGasPressure; }

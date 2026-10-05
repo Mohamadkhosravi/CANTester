@@ -51,6 +51,9 @@ namespace kt08::msg
 
         // Physical Temp (°C)
         float engineCoolantTempDegC() const { return (f_.s.engineCoolantTemp * 0.75f) - 48.0f; }
+        void setEngineCoolantTempDegC(float tempDegC) {
+            f_.s.engineCoolantTemp = static_cast<uint16_t>((tempDegC + 48.0f) / 0.75f);
+        }
         bool isValid() const { return f_.s.engineCoolantTemp != 0xFF; }
 
         const Frame &frame() const { return f_; }

@@ -66,22 +66,19 @@ namespace kt08::msg
         float actualCabinTempDegC() const { return (f_.s.actualCabinTemp * 0.5f) - 40.0f; }
 
         // Setters
-        void setActualEvaporatorTempDegC(float tempC)
-        {
-            f_.s.actualEvaporatorTemp = static_cast<uint8_t>((tempC + 40.0f) / 0.5f);
-        }
-        void setTargetEvaporatorTempDegC(float tempC)
-        {
-            f_.s.targetEvaporatorTemp = static_cast<uint8_t>((tempC + 40.0f) / 0.5f);
-        }
+        void setActualEvaporatorTempDegC(float tempC){ f_.s.actualEvaporatorTemp = static_cast<uint8_t>((tempC + 40.0f) / 0.5f);}
+        void setTargetEvaporatorTempDegC(float tempC){f_.s.targetEvaporatorTemp = static_cast<uint8_t>((tempC + 40.0f) / 0.5f);}
         void setAcRequest(bool v) { f_.s.acRequest = v ? 1 : 0; }
         void setRearDefrostRequestSwitch(bool v) { f_.s.rearDefrostRequestSwitch = v ? 1 : 0; }
         void setHeaterRequest(bool v) { f_.s.heaterRequest = v ? 1 : 0; }
         void setTargetCabinTemp(uint8_t v) { f_.s.targetCabinTemp = v & 0x1F; }
-        void setActualCabinTempDegC(float tempC)
-        {
-            f_.s.actualCabinTemp = static_cast<uint8_t>((tempC + 40.0f) / 0.5f);
-        }
+        void setActualCabinTempDegC(float tempC){f_.s.actualCabinTemp = static_cast<uint8_t>((tempC + 40.0f) / 0.5f);}
+        // Getres
+
+
+
+
+
 
         const Frame &frame() const { return f_; }
 
