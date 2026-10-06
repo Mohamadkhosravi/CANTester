@@ -4,12 +4,17 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QHeaderView>
+#include <QMap>
+#include <QSplitter>
+#include <QTabWidget>
+#include <QTime>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     setupUi();
 
+    // اتصال تایمرها به اسلات‌های مربوطه
     connect(&m_txTimer, &QTimer::timeout, this, &MainWindow::sendCyclicMessages);
     connect(&m_rxTimer, &QTimer::timeout, this, &MainWindow::readCanData);
 }
@@ -23,6 +28,12 @@ void MainWindow::setupUi()
 {
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    mainLayout->setContentsMargins(8, 8, 8, 8);
+
+    // ۱. ساخت بخش بالا (کنترل‌ها و پنل‌های Tx/Rx)
+    QWidget *topWidget = new QWidget(this);
+    QVBoxLayout *topLayout = new QVBoxLayout(topWidget);
+    topLayout->setContentsMargins(0, 0, 0, 0);
 
     QGroupBox *connGroup = new QGroupBox("Waveshare USB-CAN Control", this);
     QHBoxLayout *connLayout = new QHBoxLayout(connGroup);
@@ -53,8 +64,6 @@ void MainWindow::setupUi()
     connLayout->addWidget(m_busTypeCombo);
     connLayout->addWidget(m_connectBtn);
 
-    mainLayout->addWidget(connGroup);
-
     m_txStackedWidget = new QStackedWidget(this);
     m_txStackedWidget->addWidget(createHighSpeedTxPanel());
     m_txStackedWidget->addWidget(createLowSpeedTxPanel());
@@ -63,15 +72,116 @@ void MainWindow::setupUi()
     m_rxStackedWidget->addWidget(createHighSpeedRxPanel());
     m_rxStackedWidget->addWidget(createLowSpeedRxPanel());
 
-    mainLayout->addWidget(m_txStackedWidget);
-    mainLayout->addWidget(m_rxStackedWidget);
+    // ساخت یک ویجت افقی برای قرار دادن TX در چپ و RX در راست
+    QWidget *panelsWidget = new QWidget(this);
+    QHBoxLayout *panelsLayout = new QHBoxLayout(panelsWidget);
+    panelsLayout->setContentsMargins(0, 0, 0, 0);
+
+    panelsLayout->addWidget(m_txStackedWidget); // سمت چپ: TX Panel
+    panelsLayout->addWidget(m_rxStackedWidget); // سمت راست: RX Panel
+
+    // اضافه کردن به topLayout
+    topLayout->addWidget(connGroup);
+    topLayout->addWidget(panelsWidget);
+
+    // ۲. تعریف Splitter و اضافه کردن پنل بالا و پنل لاگ به آن
+    QSplitter *mainSplitter = new QSplitter(Qt::Vertical, this);
+    mainSplitter->addWidget(topWidget);
+    mainSplitter->addWidget(createLogConsolePanel()); // پنل لاگ در پایین
+
+    // تنظیم نسبت اولیه (۴۰٪ بخش بالا، ۶۰٪ بخش لاگ)
+    mainSplitter->setStretchFactor(0, 4);
+    mainSplitter->setStretchFactor(1, 6);
+
+    mainLayout->addWidget(mainSplitter);
 
     setCentralWidget(centralWidget);
     setWindowTitle("KT08 HVAC CAN Analyzer");
-    resize(720, 850);
+    resize(850, 900);
+
+    // اعمال استایل سفارشی
+    // applyCustomStyle();
 }
 
-// *** اصلاح حیاتی ۱: ری‌اینشالایز کردن CAN در صورت تغییر Bus Type در زمان اتصال ***
+void MainWindow::applyCustomStyle()
+{
+    this->setStyleSheet(R"(
+        QMainWindow {
+            background-color: #EAECEE;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 13px;
+        }
+        QGroupBox {
+            font-weight: bold;
+            font-size: 13px;
+            color: #1F2C39;
+            border: 1px solid #BDC3C7;
+            border-radius: 6px;
+            margin-top: 12px;
+            padding-top: 12px;
+            background-color: #FFFFFF;
+        }
+        QGroupBox::title {
+            subcontrol-origin: margin;
+            subcontrol-position: top left;
+            left: 12px;
+            padding: 0 6px;
+            background-color: #FFFFFF;
+            color: #2980B9;
+        }
+        QPushButton {
+            background-color: #2980B9;
+            color: white;
+            border-radius: 4px;
+            padding: 6px 16px;
+            font-weight: bold;
+            border: none;
+        }
+        QPushButton:hover {
+            background-color: #3498DB;
+        }
+        QPushButton:pressed {
+            background-color: #1C5980;
+        }
+        QTableWidget {
+            background-color: #FFFFFF;
+            gridline-color: #E5E8E8;
+            border: 1px solid #BDC3C7;
+            border-radius: 4px;
+            selection-background-color: #D4E6F1;
+            selection-color: #000000;
+            alternate-background-color: #F8F9F9;
+        }
+        QHeaderView::section {
+            background-color: #2C3E50;
+            color: #FFFFFF;
+            padding: 6px;
+            font-weight: bold;
+            border: none;
+        }
+        QComboBox, QSpinBox, QDoubleSpinBox {
+            border: 1px solid #BDC3C7;
+            border-radius: 4px;
+            padding: 4px 8px;
+            background: #FAFAFA;
+            min-height: 22px;
+        }
+        QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus {
+            border: 1px solid #2980B9;
+            background: #FFFFFF;
+        }
+        QSplitter::handle {
+            background-color: #BDC3C7;
+            height: 4px;
+            margin: 2px 0;
+            border-radius: 2px;
+        }
+        QSplitter::handle:hover {
+            background-color: #2980B9;
+        }
+    )");
+}
+
 void MainWindow::onBusTypeChanged(int index)
 {
     m_txStackedWidget->setCurrentIndex(index);
@@ -79,7 +189,6 @@ void MainWindow::onBusTypeChanged(int index)
     m_db.setBusType(static_cast<CanBusType>(m_busTypeCombo->currentData().toInt()));
 
     if (m_isConnected) {
-        // بازراه‌اندازی دستگاه برای اعمال Baud Rate جدید
         closeCanDevice();
         if (!openCanDevice()) {
             QMessageBox::warning(this, "CAN Warning", "Failed to re-initialize CAN device with new Baud Rate!");
@@ -90,7 +199,141 @@ void MainWindow::onBusTypeChanged(int index)
     }
 }
 
-// Tx High-Speed
+// Log Console
+QWidget* MainWindow::createLogConsolePanel()
+{
+    QGroupBox *logGroup = new QGroupBox("CAN Data Log Console (Overwrite Mode)", this);
+    QVBoxLayout *logLayout = new QVBoxLayout(logGroup);
+
+    QHBoxLayout *topBarLayout = new QHBoxLayout();
+    QLabel *formatLabel = new QLabel("Data Display Format:", this);
+    m_dataFormatCombo = new QComboBox(this);
+    m_dataFormatCombo->addItem("HEX", HexFormat);
+    m_dataFormatCombo->addItem("BINARY", BinaryFormat);
+
+    connect(m_dataFormatCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::onDataFormatChanged);
+
+    QPushButton *clearLogBtn = new QPushButton("Clear Log", this);
+    connect(clearLogBtn, &QPushButton::clicked, this, [this]() {
+        m_logTable->setRowCount(0);
+        m_idToRowMap.clear();
+    });
+
+    topBarLayout->addWidget(formatLabel);
+    topBarLayout->addWidget(m_dataFormatCombo);
+    topBarLayout->addStretch();
+    topBarLayout->addWidget(clearLogBtn);
+
+    m_logTable = new QTableWidget(0, 7, this);
+    m_logTable->setHorizontalHeaderLabels({"Last Time", "Dir", "ID (Hex)", "Type", "DLC", "Data Payload", "Count"});
+    m_logTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_logTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    QHeaderView *header = m_logTable->horizontalHeader();
+    header->setSectionResizeMode(0, QHeaderView::ResizeToContents); // Time
+    header->setSectionResizeMode(1, QHeaderView::ResizeToContents); // Dir
+    header->setSectionResizeMode(2, QHeaderView::ResizeToContents); // ID
+    header->setSectionResizeMode(3, QHeaderView::ResizeToContents); // Type
+    header->setSectionResizeMode(4, QHeaderView::ResizeToContents); // DLC
+    header->setSectionResizeMode(6, QHeaderView::ResizeToContents); // Count
+    header->setSectionResizeMode(5, QHeaderView::Stretch);
+
+    logLayout->addLayout(topBarLayout);
+    logLayout->addWidget(m_logTable);
+
+    return logGroup;
+}
+
+// تبدیل آرایه بایت به فرمت Hex یا Binary
+QString MainWindow::formatBytes(const std::array<uint8_t, 8> &data, uint8_t dlc, DataFormat format)
+{
+    QStringList result;
+    for (int i = 0; i < dlc; ++i) {
+        if (format == HexFormat) {
+            result << QString("%1").arg(data[i], 2, 16, QChar('0')).toUpper();
+        } else {
+            result << QString("%1").arg(data[i], 8, 2, QChar('0'));
+        }
+    }
+    return result.join(" ");
+}
+
+// اضافه کردن یا بروزرسانی لاگ در جدول
+void MainWindow::addLogEntry(const QString &dir, uint32_t id, const std::array<uint8_t, 8> &data, uint8_t dlc)
+{
+    QString timeStr = QTime::currentTime().toString("hh:mm:ss.z");
+    QString idStr = QString("0x%1").arg(id, (m_db.busType() == CanBusType::LowSpeed ? 8 : 3), 16, QChar('0')).toUpper();
+    QString typeStr = (m_db.busType() == CanBusType::LowSpeed) ? "EXT (29-bit)" : "STD (11-bit)";
+    QString formattedData = formatBytes(data, dlc, m_currentDataFormat);
+
+    if (m_idToRowMap.contains(id)) {
+        int targetRow = m_idToRowMap[id];
+
+        m_logTable->item(targetRow, 0)->setText(timeStr);
+        m_logTable->item(targetRow, 1)->setText(dir);
+
+        if (dir == "TX") {
+            m_logTable->item(targetRow, 1)->setForeground(Qt::blue);
+        } else {
+            m_logTable->item(targetRow, 1)->setForeground(Qt::darkGreen);
+        }
+
+        m_logTable->item(targetRow, 3)->setText(typeStr);
+        m_logTable->item(targetRow, 4)->setText(QString::number(dlc));
+        m_logTable->item(targetRow, 5)->setText(formattedData);
+
+        int currentCount = m_logTable->item(targetRow, 6)->text().toInt();
+        m_logTable->item(targetRow, 6)->setText(QString::number(currentCount + 1));
+    } else {
+        int newRow = m_logTable->rowCount();
+        m_logTable->insertRow(newRow);
+
+        m_logTable->setItem(newRow, 0, new QTableWidgetItem(timeStr));
+
+        QTableWidgetItem *dirItem = new QTableWidgetItem(dir);
+        if (dir == "TX") {
+            dirItem->setForeground(Qt::blue);
+        } else {
+            dirItem->setForeground(Qt::darkGreen);
+        }
+        m_logTable->setItem(newRow, 1, dirItem);
+
+        m_logTable->setItem(newRow, 2, new QTableWidgetItem(idStr));
+        m_logTable->setItem(newRow, 3, new QTableWidgetItem(typeStr));
+        m_logTable->setItem(newRow, 4, new QTableWidgetItem(QString::number(dlc)));
+        m_logTable->setItem(newRow, 5, new QTableWidgetItem(formattedData));
+        m_logTable->setItem(newRow, 6, new QTableWidgetItem("1"));
+
+        m_idToRowMap[id] = newRow;
+    }
+}
+
+// اسلات تغییر فرمت Hex/Binary در ComboBox
+void MainWindow::onDataFormatChanged(int index)
+{
+    m_currentDataFormat = static_cast<DataFormat>(m_dataFormatCombo->currentData().toInt());
+
+    for (int row = 0; row < m_logTable->rowCount(); ++row) {
+        uint8_t dlc = m_logTable->item(row, 4)->text().toUInt();
+        QString currentDataStr = m_logTable->item(row, 5)->text();
+        QStringList byteTokens = currentDataStr.split(" ");
+        std::array<uint8_t, 8> dataBuffer{};
+
+        for (int i = 0; i < byteTokens.size() && i < dlc; ++i) {
+            bool ok = false;
+            if (m_currentDataFormat == HexFormat) {
+                dataBuffer[i] = static_cast<uint8_t>(byteTokens[i].toUInt(&ok, 2));
+            } else {
+                dataBuffer[i] = static_cast<uint8_t>(byteTokens[i].toUInt(&ok, 16));
+            }
+        }
+
+        m_logTable->item(row, 5)->setText(formatBytes(dataBuffer, dlc, m_currentDataFormat));
+    }
+}
+
+// Tx High-Speed Panel
 QWidget* MainWindow::createHighSpeedTxPanel()
 {
     QGroupBox *simGroup = new QGroupBox("High-Speed ECU Simulation (Tx to HVAC)", this);
@@ -132,78 +375,133 @@ QWidget* MainWindow::createHighSpeedTxPanel()
     return simGroup;
 }
 
+// Tx Low-Speed Panel
 QWidget* MainWindow::createLowSpeedTxPanel()
 {
-    QGroupBox *simGroup = new QGroupBox("Low-Speed BCM Simulation (Tx to HVAC)", this);
-    QGridLayout *simLayout = new QGridLayout(simGroup);
+    QGroupBox *simGroup = new QGroupBox("BD-CAN Transmitter Simulation (MMS & BCM -> HVAC)", this);
+    QVBoxLayout *mainLayout = new QVBoxLayout(simGroup);
+    mainLayout->setContentsMargins(4, 4, 4, 4);
 
-    // 1. BcmInfo2 Controls
-    m_lsStartSwitchCombo = new QComboBox(this);
-    m_lsStartSwitchCombo->addItems({"OFF (0)", "ACC (1)", "IGN (2)", "START (3)"});
-    m_lsEngineStateCombo = new QComboBox(this);
-    m_lsEngineStateCombo->addItems({"Stop (0)", "Crank (1)", "Running (2)", "Fault (3)"});
-    m_lsVehicleSpeedSpin = new QDoubleSpinBox(this);
-    m_lsVehicleSpeedSpin->setRange(0.0, 250.0);
-    m_lsVehicleSpeedSpin->setValue(0.0);
+    QTabWidget *txTabs = new QTabWidget(this);
 
-    // 2. BcmInfo4 Controls
-    m_lsAcStateCheck = new QCheckBox("AC State Active", this);
-    m_lsRearHeaterCheck = new QCheckBox("Rear Screen Heater Active", this);
-    m_lsWaterTempSpin = new QDoubleSpinBox(this);
-    m_lsWaterTempSpin->setRange(-48.0, 140.0);
-    m_lsWaterTempSpin->setValue(85.0);
-    m_lsAmbientTempSpin = new QDoubleSpinBox(this);
-    m_lsAmbientTempSpin->setRange(-40.0, 85.0);
-    m_lsAmbientTempSpin->setValue(25.0);
+    // Tab 1: MMS Buttons (MMS_INFO3 - 0x170)
+    QWidget *mmsTab = new QWidget(this);
+    QGridLayout *mmsGrid = new QGridLayout(mmsTab);
+    mmsGrid->setSpacing(4);
 
-    // 3. BcmInfo19 Controls
-    m_lsCompressorRpmSpin = new QSpinBox(this);
-    m_lsCompressorRpmSpin->setRange(0, 12750);
-    m_lsCompressorRpmSpin->setSingleStep(50);
-    m_lsCompressorRpmSpin->setValue(1000);
+    mmsGrid->addWidget(m_mmsAutoCheck = new QCheckBox("AUTO Button"), 0, 0);
+    mmsGrid->addWidget(m_mmsAcCheck = new QCheckBox("AC Button"), 0, 1);
+    mmsGrid->addWidget(m_mmsPowerCheck = new QCheckBox("POWER Button"), 0, 2);
+    mmsGrid->addWidget(m_mmsIntakeCheck = new QCheckBox("Intake (Recirc) Button"), 0, 3);
 
-    m_lsOutGasPressureSpin = new QSpinBox(this);
-    m_lsOutGasPressureSpin->setRange(0, 255);
-    m_lsInGasPressureSpin = new QSpinBox(this);
-    m_lsInGasPressureSpin->setRange(0, 255);
+    mmsGrid->addWidget(m_mmsTempIncCheck = new QCheckBox("Temp + Button"), 1, 0);
+    mmsGrid->addWidget(m_mmsTempDecCheck = new QCheckBox("Temp - Button"), 1, 1);
+    mmsGrid->addWidget(m_mmsBlowerIncCheck = new QCheckBox("Blower + Button"), 1, 2);
+    mmsGrid->addWidget(m_mmsBlowerDecCheck = new QCheckBox("Blower - Button"), 1, 3);
 
-    m_lsOutGasTempSpin = new QSpinBox(this);
-    m_lsOutGasTempSpin->setRange(-40, 215);
-    m_lsInGasTempSpin = new QSpinBox(this);
-    m_lsInGasTempSpin->setRange(-40, 215);
+    mmsGrid->addWidget(m_mmsFaceCheck = new QCheckBox("Face Mode"), 2, 0);
+    mmsGrid->addWidget(m_mmsFootCheck = new QCheckBox("Foot Mode"), 2, 1);
+    mmsGrid->addWidget(m_mmsScreenCheck = new QCheckBox("Screen Mode"), 2, 2);
+    mmsGrid->addWidget(m_mmsDefrostCheck = new QCheckBox("Front Defrost"), 2, 3);
 
-    m_lsShutOffValveCheck = new QCheckBox("Shut Off Valve Open", this);
+    mmsGrid->addWidget(m_mmsRearHeaterCheck = new QCheckBox("Rear Defrost"), 3, 0);
+    mmsGrid->addWidget(m_mmsFootFaceCheck = new QCheckBox("Foot/Face Mode"), 3, 1);
+    mmsGrid->addWidget(m_mmsFootScreenCheck = new QCheckBox("Foot/Screen Mode"), 3, 2);
+
+    txTabs->addTab(mmsTab, "MMS Controls (0x170)");
+
+    // Tab 2: BCM States (BCM_INFO2 / INFO4 / INFO5)
+    QWidget *bcmTab = new QWidget(this);
+    QGridLayout *bcmGrid = new QGridLayout(bcmTab);
+    bcmGrid->setSpacing(6);
 
     int row = 0;
-    simLayout->addWidget(new QLabel("<b>BcmInfo2:</b>"), row++, 0);
-    simLayout->addWidget(new QLabel("Start Switch State:"), row, 0);
-    simLayout->addWidget(m_lsStartSwitchCombo, row++, 1);
-    simLayout->addWidget(new QLabel("Engine State:"), row, 0);
-    simLayout->addWidget(m_lsEngineStateCombo, row++, 1);
-    simLayout->addWidget(new QLabel("Vehicle Speed (Kph):"), row, 0);
-    simLayout->addWidget(m_lsVehicleSpeedSpin, row++, 1);
+    bcmGrid->addWidget(new QLabel("Vehicle Type:"), row, 0);
+    m_lsVehicleTypeCombo = new QComboBox(this);
+    m_lsVehicleTypeCombo->addItems({"Petrol (0)", "Hybrid (1)"});
+    bcmGrid->addWidget(m_lsVehicleTypeCombo, row, 1);
 
-    simLayout->addWidget(new QLabel("<b>BcmInfo4:</b>"), row++, 0);
-    simLayout->addWidget(m_lsAcStateCheck, row, 0);
-    simLayout->addWidget(m_lsRearHeaterCheck, row++, 1);
-    simLayout->addWidget(new QLabel("Water Temp (°C):"), row, 0);
-    simLayout->addWidget(m_lsWaterTempSpin, row++, 1);
-    simLayout->addWidget(new QLabel("Ambient Temp (°C):"), row, 0);
-    simLayout->addWidget(m_lsAmbientTempSpin, row++, 1);
+    bcmGrid->addWidget(new QLabel("Start Switch:"), row, 2);
+    m_lsStartSwitchCombo = new QComboBox(this);
+    m_lsStartSwitchCombo->addItems({"OFF (0)", "ACC (1)", "ON (2)", "CRANK (3)"});
+    bcmGrid->addWidget(m_lsStartSwitchCombo, row, 3);
+    row++;
 
-    simLayout->addWidget(new QLabel("<b>BcmInfo19:</b>"), row++, 0);
-    simLayout->addWidget(new QLabel("Compressor Speed (RPM):"), row, 0);
-    simLayout->addWidget(m_lsCompressorRpmSpin, row++, 1);
-    simLayout->addWidget(new QLabel("Out Gas Temp (°C):"), row, 0);
-    simLayout->addWidget(m_lsOutGasTempSpin, row++, 1);
-    simLayout->addWidget(new QLabel("In Gas Temp (°C):"), row, 0);
-    simLayout->addWidget(m_lsInGasTempSpin, row++, 1);
-    simLayout->addWidget(m_lsShutOffValveCheck, row++, 0, 1, 2);
+    bcmGrid->addWidget(new QLabel("Engine State:"), row, 0);
+    m_lsEngineStateCombo = new QComboBox(this);
+    m_lsEngineStateCombo->addItems({"Stop (0)", "Crank (1)", "Running (2)", "Error (3)"});
+    bcmGrid->addWidget(m_lsEngineStateCombo, row, 1);
 
+    bcmGrid->addWidget(new QLabel("Vehicle Speed (Km/h):"), row, 2);
+    m_lsVehicleSpeedSpin = new QDoubleSpinBox(this);
+    m_lsVehicleSpeedSpin->setRange(0.0, 250.0);
+    bcmGrid->addWidget(m_lsVehicleSpeedSpin, row, 3);
+    row++;
+
+    bcmGrid->addWidget(new QLabel("Engine Water Temp (°C):"), row, 0);
+    m_lsWaterTempSpin = new QDoubleSpinBox(this);
+    m_lsWaterTempSpin->setRange(-48.0, 142.5);
+    m_lsWaterTempSpin->setValue(85.0);
+    bcmGrid->addWidget(m_lsWaterTempSpin, row, 1);
+
+    bcmGrid->addWidget(new QLabel("Ambient Temp (°C):"), row, 2);
+    m_lsAmbientTempSpin = new QDoubleSpinBox(this);
+    m_lsAmbientTempSpin->setRange(-40.0, 86.5);
+    m_lsAmbientTempSpin->setValue(25.0);
+    bcmGrid->addWidget(m_lsAmbientTempSpin, row, 3);
+    row++;
+
+    m_lsAcStateCheck = new QCheckBox("BCM AC Engaged", this);
+    m_lsRearHeaterCheck = new QCheckBox("BCM Rear Heater ON", this);
+    bcmGrid->addWidget(m_lsAcStateCheck, row, 0, 1, 2);
+    bcmGrid->addWidget(m_lsRearHeaterCheck, row, 2, 1, 2);
+
+    txTabs->addTab(bcmTab, "BCM Info (0x088/0x0C8/0x0E8)");
+
+    // Tab 3: BCM Compressor & Gas (BCM_INFO19 - 0x1F0)
+    QWidget *bcm19Tab = new QWidget(this);
+    QGridLayout *bcm19Grid = new QGridLayout(bcm19Tab);
+    bcm19Grid->setSpacing(6);
+
+    row = 0;
+    bcm19Grid->addWidget(new QLabel("Compressor Speed (RPM):"), row, 0);
+    m_lsCompressorRpmSpin = new QSpinBox(this);
+    m_lsCompressorRpmSpin->setRange(0, 12700);
+    m_lsCompressorRpmSpin->setSingleStep(50);
+    bcm19Grid->addWidget(m_lsCompressorRpmSpin, row, 1);
+
+    bcm19Grid->addWidget(new QLabel("Out Gas Press (Bar):"), row, 2);
+    m_lsOutGasPressureSpin = new QSpinBox(this);
+    m_lsOutGasPressureSpin->setRange(0, 30);
+    bcm19Grid->addWidget(m_lsOutGasPressureSpin, row, 3);
+    row++;
+
+    bcm19Grid->addWidget(new QLabel("In Gas Press (Bar):"), row, 0);
+    m_lsInGasPressureSpin = new QSpinBox(this);
+    m_lsInGasPressureSpin->setRange(0, 50);
+    bcm19Grid->addWidget(m_lsInGasPressureSpin, row, 1);
+
+    bcm19Grid->addWidget(new QLabel("Out Gas Temp (°C):"), row, 2);
+    m_lsOutGasTempSpin = new QSpinBox(this);
+    m_lsOutGasTempSpin->setRange(-40, 150);
+    bcm19Grid->addWidget(m_lsOutGasTempSpin, row, 3);
+    row++;
+
+    bcm19Grid->addWidget(new QLabel("In Gas Temp (°C):"), row, 0);
+    m_lsInGasTempSpin = new QSpinBox(this);
+    m_lsInGasTempSpin->setRange(-40, 150);
+    bcm19Grid->addWidget(m_lsInGasTempSpin, row, 1);
+
+    m_lsShutOffValveCheck = new QCheckBox("ShutOff Valve Active", this);
+    bcm19Grid->addWidget(m_lsShutOffValveCheck, row, 2, 1, 2);
+
+    txTabs->addTab(bcm19Tab, "BCM HVAC Specs (0x1F0)");
+
+    mainLayout->addWidget(txTabs);
     return simGroup;
 }
 
-// Rx High-Speed
+// Rx High-Speed Panel
 QWidget* MainWindow::createHighSpeedRxPanel()
 {
     QGroupBox *rxGroup = new QGroupBox("High-Speed HVAC Monitor (Rx HVAC_1 0x086)", this);
@@ -232,39 +530,54 @@ QWidget* MainWindow::createHighSpeedRxPanel()
     return rxGroup;
 }
 
-// Rx Low-Speed
+// Rx Low-Speed Panel
 QWidget* MainWindow::createLowSpeedRxPanel()
 {
-    QGroupBox *rxGroup = new QGroupBox("Low-Speed HVAC Received Data (Rx)", this);
+    QGroupBox *rxGroup = new QGroupBox("HVAC Unit Live Telemetry (Rx)", this);
     QVBoxLayout *rxLayout = new QVBoxLayout(rxGroup);
+    rxLayout->setContentsMargins(4, 4, 4, 4);
 
-    m_lsRxTable = new QTableWidget(6, 2, this);
-    m_lsRxTable->setHorizontalHeaderLabels({"Low-Speed Parameter (HvacInfo2)", "Live Value"});
+    m_lsRxTable = new QTableWidget(16, 2, this);
+    m_lsRxTable->setHorizontalHeaderLabels({"BD-CAN Signal Name", "Decoded Value"});
     m_lsRxTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    m_lsRxTable->verticalHeader()->setVisible(false);
+    m_lsRxTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_lsRxTable->setSelectionMode(QAbstractItemView::NoSelection);
 
-    QStringList lsSignals = {
-        "Cabin Temp (°C)",
-        "Set Temp (°C)",
-        "Blower Speed",
-        "AC Indicator Status",
-        "Auto Mode",
-        "Power State"
+    QStringList hvacSignals = {
+        "Cabin Temp (°C) [0x146]",
+        "Target Temp Set (°C) [0x146]",
+        "Blower Speed Level (0-8) [0x146]",
+        "Evaporator Target Temp (°C) [0x086]",
+        "Evaporator Actual Temp (°C) [0x086]",
+        "AC Request (0x086)",
+        "AC Indicator Status (0x146)",
+        "Auto Mode (0x146)",
+        "Power State (0x146)",
+        "Intake Pattern (Recirc) [0x146]",
+        "Face Mode (0x146)",
+        "Foot Mode (0x146)",
+        "Screen Mode (0x146)",
+        "Front Screen Defrost (0x146)",
+        "Heater Request (0x146)",
+        "Active DTC Fault Code [0x526]"
     };
 
-    for (int i = 0; i < lsSignals.size(); ++i) {
-        m_lsRxTable->setItem(i, 0, new QTableWidgetItem(lsSignals[i]));
-        m_lsRxTable->setItem(i, 1, new QTableWidgetItem("N/A"));
+    for (int i = 0; i < hvacSignals.size(); ++i) {
+        m_lsRxTable->setItem(i, 0, new QTableWidgetItem(hvacSignals[i]));
+        QTableWidgetItem *valItem = new QTableWidgetItem("N/A");
+        valItem->setTextAlignment(Qt::AlignCenter);
+
+        if (i == 15) {
+            valItem->setForeground(Qt::red);
+        } else {
+            valItem->setForeground(Qt::white);
+        }
+
+        m_lsRxTable->setItem(i, 1, valItem);
     }
 
-    m_lsFaultTable = new QTableWidget(1, 2, this);
-    m_lsFaultTable->setHorizontalHeaderLabels({"Diagnostic (HvacFlt)", "Active Fault Code (DTC)"});
-    m_lsFaultTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    m_lsFaultTable->setItem(0, 0, new QTableWidgetItem("Fault DTC Code"));
-    m_lsFaultTable->setItem(0, 1, new QTableWidgetItem("No Fault"));
-
     rxLayout->addWidget(m_lsRxTable);
-    rxLayout->addWidget(m_lsFaultTable);
-
     return rxGroup;
 }
 
@@ -323,7 +636,6 @@ void MainWindow::toggleConnection()
     }
 }
 
-// *** اصلاح حیاتی ۲: تنظیم دقیق Timing0/Timing1 و AccMask ***
 bool MainWindow::openCanDevice()
 {
     if (!fnOpenDevice) return false;
@@ -332,9 +644,9 @@ bool MainWindow::openCanDevice()
 
     VCI_INIT_CONFIG config{};
     config.AccCode = 0x00000000;
-    config.AccMask = 0xFFFFFFFF; // دریافت تمام فریم‌ها
-    config.Filter  = 0;          // Single filter mode (0 = รับทุก فیلتر)
-    config.Mode    = 0;          // Normal operation mode
+    config.AccMask = 0xFFFFFFFF;
+    config.Filter  = 0;
+    config.Mode    = 0;
 
     if (m_db.busType() == CanBusType::HighSpeed) {
         config.Timing0 = 0x00; // 500 Kbps
@@ -373,9 +685,9 @@ void MainWindow::sendCyclicMessages()
 {
     if (!m_isConnected) return;
 
-    std::array<uint8_t, 8> buffer{};
-
     if (m_db.busType() == CanBusType::HighSpeed) {
+        std::array<uint8_t, 8> buffer{};
+
         m_db.bcm4().setStartSwitchStatus(m_startSwitchCombo->currentIndex());
         m_db.bcm4().encode(buffer);
         sendCanFrame(m_db.bcm4().kId, buffer, m_db.bcm4().kDlc);
@@ -395,34 +707,91 @@ void MainWindow::sendCyclicMessages()
         sendCanFrame(m_db.hcu10().kId, buffer, m_db.hcu10().kDlc);
     }
     else {
-        // 1. BcmInfo2
-        m_db.bcmInfo2().setStartSwitchState(m_lsStartSwitchCombo->currentIndex());
-        m_db.bcmInfo2().setEngineState(m_lsEngineStateCombo->currentIndex());
-        m_db.bcmInfo2().setInstantVehicleSpeedKph(m_lsVehicleSpeedSpin->value());
-        m_db.bcmInfo2().encode(buffer);
-        sendCanFrame(m_db.bcmInfo2().kId, buffer, m_db.bcmInfo2().kDlc);
-
-        // 2. BcmInfo4
-        m_db.bcmInfo4().setAcState(m_lsAcStateCheck->isChecked() ? 1 : 0);
-        m_db.bcmInfo4().setRearScreenHeaterState(m_lsRearHeaterCheck->isChecked() ? 1 : 0);
-        m_db.bcmInfo4().setEngineWaterTemperatureC(m_lsWaterTempSpin->value());
-        m_db.bcmInfo4().setAmbientTemperatureC(m_lsAmbientTempSpin->value());
-        m_db.bcmInfo4().encode(buffer);
-        sendCanFrame(m_db.bcmInfo4().kId, buffer, m_db.bcmInfo4().kDlc);
-
-        // 3. BcmInfo19
-        m_db.bcmInfo19().setCompressorActualSpeedRpm(m_lsCompressorRpmSpin->value());
-        m_db.bcmInfo19().setOutGasPressure(m_lsOutGasPressureSpin->value());
-        m_db.bcmInfo19().setInGasPressure(m_lsInGasPressureSpin->value());
-        m_db.bcmInfo19().setOutGasTemperatureC(m_lsOutGasTempSpin->value());
-        m_db.bcmInfo19().setInGasTemperatureC(m_lsInGasTempSpin->value());
-        m_db.bcmInfo19().setShutOffValveStatus(m_lsShutOffValveCheck->isChecked() ? 1 : 0);
-        m_db.bcmInfo19().encode(buffer);
-        sendCanFrame(m_db.bcmInfo19().kId, buffer, m_db.bcmInfo19().kDlc);
+        sendLowSpeedCanFrames();
     }
 }
 
-// *** اصلاح حیاتی ۳: تنظیم صریح فریم‌های Extended ID برای Low-Speed ***
+void MainWindow::sendLowSpeedCanFrames()
+{
+    // ۱. ارسال فریم MMS_INFO3 (کد 0x170)
+    {
+        std::array<uint8_t, 8> data{};
+
+        if (m_mmsAutoCheck && m_mmsAutoCheck->isChecked())         data[0] |= (1 << 0);
+        if (m_mmsIntakeCheck && m_mmsIntakeCheck->isChecked())     data[0] |= (1 << 1);
+        if (m_mmsFaceCheck && m_mmsFaceCheck->isChecked())         data[0] |= (1 << 2);
+        if (m_mmsFootCheck && m_mmsFootCheck->isChecked())         data[0] |= (1 << 3);
+        if (m_mmsScreenCheck && m_mmsScreenCheck->isChecked())       data[0] |= (1 << 4);
+        if (m_mmsDefrostCheck && m_mmsDefrostCheck->isChecked())     data[0] |= (1 << 5);
+        if (m_mmsRearHeaterCheck && m_mmsRearHeaterCheck->isChecked()) data[0] |= (1 << 6);
+        if (m_mmsPowerCheck && m_mmsPowerCheck->isChecked())       data[0] |= (1 << 7);
+
+        if (m_mmsAcCheck && m_mmsAcCheck->isChecked())             data[1] |= (1 << 0);
+        if (m_mmsTempIncCheck && m_mmsTempIncCheck->isChecked())   data[1] |= (1 << 1);
+        if (m_mmsTempDecCheck && m_mmsTempDecCheck->isChecked())   data[1] |= (1 << 2);
+        if (m_mmsBlowerIncCheck && m_mmsBlowerIncCheck->isChecked()) data[1] |= (1 << 3);
+        if (m_mmsBlowerDecCheck && m_mmsBlowerDecCheck->isChecked()) data[1] |= (1 << 4);
+        if (m_mmsFootFaceCheck && m_mmsFootFaceCheck->isChecked())  data[1] |= (1 << 5);
+        if (m_mmsFootScreenCheck && m_mmsFootScreenCheck->isChecked()) data[1] |= (1 << 6);
+
+        sendCanFrame(0x170, data, 8);
+    }
+
+    // ۲. ارسال فریم BCM_INFO2 (کد 0x088)
+    {
+        std::array<uint8_t, 8> data{};
+
+        uint8_t vehType = m_lsVehicleTypeCombo ? m_lsVehicleTypeCombo->currentIndex() : 0;
+        uint8_t engState = m_lsEngineStateCombo ? m_lsEngineStateCombo->currentIndex() : 0;
+        uint8_t startSw = m_lsStartSwitchCombo ? m_lsStartSwitchCombo->currentIndex() : 0;
+
+        data[0] |= (vehType & 0x01);
+        data[1] |= (engState & 0x03);
+        data[1] |= ((startSw & 0x03) << 2);
+        data[1] |= (0x0A << 4); // Speed Validity = Valid
+
+        double speed = m_lsVehicleSpeedSpin ? m_lsVehicleSpeedSpin->value() : 0.0;
+        uint16_t speedRaw = static_cast<uint16_t>(speed / 0.125);
+        data[4] = speedRaw & 0xFF;
+        data[5] = (speedRaw >> 8) & 0x0F;
+
+        sendCanFrame(0x088, data, 8);
+    }
+
+    // ۳. ارسال فریم BCM_INFO4 (کد 0x0C8)
+    {
+        std::array<uint8_t, 8> data{};
+
+        if (m_lsAcStateCheck && m_lsAcStateCheck->isChecked())         data[0] |= (1 << 6);
+        if (m_lsRearHeaterCheck && m_lsRearHeaterCheck->isChecked()) data[0] |= (1 << 7);
+
+        double waterTemp = m_lsWaterTempSpin ? m_lsWaterTempSpin->value() : 85.0;
+        uint8_t waterTempRaw = static_cast<uint8_t>((waterTemp - (-48.0)) / 0.75);
+        data[1] = waterTempRaw;
+
+        sendCanFrame(0x0C8, data, 8);
+    }
+
+    // ۴. ارسال فریم BCM_INFO19 (کد 0x1F0)
+    {
+        std::array<uint8_t, 8> data{};
+
+        uint16_t compRpm = m_lsCompressorRpmSpin ? m_lsCompressorRpmSpin->value() : 0;
+        data[0] = static_cast<uint8_t>(compRpm / 50);
+
+        data[2] = static_cast<uint8_t>(m_lsOutGasPressureSpin ? m_lsOutGasPressureSpin->value() : 0);
+        data[3] = static_cast<uint8_t>(m_lsInGasPressureSpin ? m_lsInGasPressureSpin->value() : 0);
+        data[4] = static_cast<uint8_t>((m_lsOutGasTempSpin ? m_lsOutGasTempSpin->value() : 0) + 40);
+        data[5] = static_cast<uint8_t>((m_lsInGasTempSpin ? m_lsInGasTempSpin->value() : 0) + 40);
+
+        if (m_lsShutOffValveCheck && m_lsShutOffValveCheck->isChecked()) {
+            data[6] |= (1 << 0);
+        }
+
+        sendCanFrame(0x1F0, data, 8);
+    }
+}
+
 void MainWindow::sendCanFrame(uint32_t id, const std::array<uint8_t, 8>& data, uint8_t dlc)
 {
     if (!fnTransmit) return;
@@ -433,10 +802,10 @@ void MainWindow::sendCanFrame(uint32_t id, const std::array<uint8_t, 8>& data, u
     sendFrame.DataLen = dlc;
 
     if (m_db.busType() == CanBusType::LowSpeed) {
-        sendFrame.ExternFlag = 1; // 1 برای Extended 29-bit ID
+        sendFrame.ExternFlag = 0; // 1 Extended 29-bit ID
         sendFrame.RemoteFlag = 0;
     } else {
-        sendFrame.ExternFlag = 0; // 0 برای Standard 11-bit ID
+        sendFrame.ExternFlag = 0; // 0 Standard 11-bit ID
         sendFrame.RemoteFlag = 0;
     }
 
@@ -444,7 +813,9 @@ void MainWindow::sendCanFrame(uint32_t id, const std::array<uint8_t, 8>& data, u
         sendFrame.Data[i] = data[i];
     }
 
-    fnTransmit(m_devType, m_devIndex, m_canIndex, &sendFrame, 1);
+    if (fnTransmit(m_devType, m_devIndex, m_canIndex, &sendFrame, 1) == 1) {
+        addLogEntry("TX", id, data, dlc);
+    }
 }
 
 void MainWindow::readCanData()
@@ -460,6 +831,7 @@ void MainWindow::readCanData()
             for (int j = 0; j < rxFrames[i].DataLen; ++j) {
                 data[j] = rxFrames[i].Data[j];
             }
+            addLogEntry("RX", rxFrames[i].ID, data, rxFrames[i].DataLen);
             processReceivedFrame(rxFrames[i].ID, data, rxFrames[i].DataLen);
         }
     }
@@ -484,16 +856,46 @@ void MainWindow::processReceivedFrame(uint32_t id, const std::array<uint8_t, 8>&
     }
     // --- Low-Speed Decoding ---
     else if (m_db.busType() == CanBusType::LowSpeed) {
-        if (id == kt08::msg::HvacInfo2::kId) {
-            m_lsRxTable->item(0, 1)->setText(QString::number(m_db.hvacInfo2().cabinTemperatureC(), 'f', 1) + " °C");
-            m_lsRxTable->item(1, 1)->setText(QString::number(m_db.hvacInfo2().temperatureSetC(), 'f', 1) + " °C");
-            m_lsRxTable->item(2, 1)->setText(QString::number(m_db.hvacInfo2().blowerSpeed()));
-            m_lsRxTable->item(3, 1)->setText(m_db.hvacInfo2().acIndicator() ? "ON" : "OFF");
-            m_lsRxTable->item(4, 1)->setText(m_db.hvacInfo2().autoMode() ? "ON" : "OFF");
-            m_lsRxTable->item(5, 1)->setText(m_db.hvacInfo2().powerState() ? "ON" : "OFF");
+        if (id == 0x086) { // HVAC_INFO
+            double evapTarget = (data[0] * 0.5) - 20.0;
+            double evapActual = (data[1] * 0.5) - 20.0;
+            bool acReq = (data[5] & 0x01);
+
+            m_lsRxTable->item(3, 1)->setText(QString::number(evapTarget, 'f', 1) + " °C");
+            m_lsRxTable->item(4, 1)->setText(QString::number(evapActual, 'f', 1) + " °C");
+            m_lsRxTable->item(5, 1)->setText(acReq ? "ON" : "OFF");
         }
-        else if (id == kt08::msg::HvacFlt::kId) {
-            m_lsFaultTable->item(0, 1)->setText(QString("0x%1").arg(m_db.hvacFlt().faultDtc(), 6, 16, QChar('0')).toUpper());
+        else if (id == 0x146) { // HVAC_INFO2
+            bool autoMode = (data[0] & 0x01);
+            bool intakePattern = (data[0] & 0x02);
+            bool faceMode = (data[0] & 0x04);
+            bool footMode = (data[0] & 0x08);
+            bool screenMode = (data[0] & 0x10);
+            bool defrostState = (data[0] & 0x20);
+            bool powerState = (data[0] & 0x40);
+            bool acIndicator = (data[0] & 0x80);
+
+            double tempSet = (data[1] * 0.5) + 16.0;
+            bool heaterReq = (data[1] & 0x40);
+            uint8_t blowerSpeed = data[2] & 0x0F;
+            double cabinTemp = (data[3] * 0.5) - 40.0;
+
+            m_lsRxTable->item(0, 1)->setText(QString::number(cabinTemp, 'f', 1) + " °C");
+            m_lsRxTable->item(1, 1)->setText(QString::number(tempSet, 'f', 1) + " °C");
+            m_lsRxTable->item(2, 1)->setText("Level " + QString::number(blowerSpeed));
+            m_lsRxTable->item(6, 1)->setText(acIndicator ? "ON" : "OFF");
+            m_lsRxTable->item(7, 1)->setText(autoMode ? "ON" : "OFF");
+            m_lsRxTable->item(8, 1)->setText(powerState ? "ON" : "OFF");
+            m_lsRxTable->item(9, 1)->setText(intakePattern ? "Outer (Recirc OFF)" : "Inner (Recirc ON)");
+            m_lsRxTable->item(10, 1)->setText(faceMode ? "ON" : "OFF");
+            m_lsRxTable->item(11, 1)->setText(footMode ? "ON" : "OFF");
+            m_lsRxTable->item(12, 1)->setText(screenMode ? "ON" : "OFF");
+            m_lsRxTable->item(13, 1)->setText(defrostState ? "ON" : "OFF");
+            m_lsRxTable->item(14, 1)->setText(heaterReq ? "ON" : "OFF");
+        }
+        else if (id == 0x526) { // HVAC_FLT
+            uint32_t dtc = (data[1] << 16) | (data[2] << 8) | data[3];
+            m_lsRxTable->item(15, 1)->setText(dtc == 0 ? "No Fault" : QString("DTC: 0x%1").arg(dtc, 6, 16, QChar('0')).toUpper());
         }
     }
 }

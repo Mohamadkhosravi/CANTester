@@ -18,9 +18,9 @@
 #include <QLibrary>
 #include <QStackedWidget>
 #include <windows.h>
-
+#include <QTime>
 #include "KT08Database.h"
-
+#include <QMap>
 // --- ساختارها و تعاریف ControlCAN API ---
 #define VCI_USBCAN1 3
 #define VCI_USBCAN2 4
@@ -81,13 +81,23 @@ private slots:
     void sendCyclicMessages();
     void readCanData();
     void onBusTypeChanged(int index);
-
+    void onDataFormatChanged(int index);
+    void sendLowSpeedCanFrames();
 private:
     void setupUi();
+    QMap<uint32_t, int> m_idToRowMap;
     QWidget* createHighSpeedTxPanel();
     QWidget* createLowSpeedTxPanel();
     QWidget* createHighSpeedRxPanel();
     QWidget* createLowSpeedRxPanel();
+    QTableWidget *m_logTable;
+    QComboBox *m_dataFormatCombo;
+
+    enum DataFormat {
+        HexFormat = 0,
+        BinaryFormat = 1
+    };
+    DataFormat m_currentDataFormat = HexFormat;
 
     bool loadControlCanDll();
     bool openCanDevice();
@@ -114,16 +124,19 @@ private:
     QTimer m_rxTimer;
     kt08::msg::Kt08Database m_db;
 
-    // عناصر UI عمومی
+    //  UI
     QComboBox *m_devTypeCombo{nullptr};
     QComboBox *m_canChannelCombo{nullptr};
     QComboBox *m_busTypeCombo{nullptr};
     QPushButton *m_connectBtn{nullptr};
+    QWidget* createLogConsolePanel();
+    void applyCustomStyle();
+
 
     QStackedWidget *m_txStackedWidget{nullptr};
     QStackedWidget *m_rxStackedWidget{nullptr};
 
-    // کنترل‌های High-Speed (Tx)
+    //  High-Speed (Tx)
     QComboBox *m_startSwitchCombo{nullptr};
     QDoubleSpinBox *m_ambientTempSpin{nullptr};
     QDoubleSpinBox *m_coolantTempSpin{nullptr};
@@ -132,7 +145,6 @@ private:
     QCheckBox *m_acReqStatusCheck{nullptr};
     QTableWidget *m_hsRxTable{nullptr};
 
-    // کنترل‌های Low-Speed (Tx)
     QComboBox *m_lsStartSwitchCombo{nullptr};        // BcmInfo2
     QComboBox *m_lsEngineStateCombo{nullptr};        // BcmInfo2
     QDoubleSpinBox *m_lsVehicleSpeedSpin{nullptr};   // BcmInfo2 (Kph)
@@ -149,7 +161,37 @@ private:
     QSpinBox *m_lsInGasTempSpin{nullptr};            // BcmInfo19 (°C)
     QCheckBox *m_lsShutOffValveCheck{nullptr};       // BcmInfo19
 
-    // جداول دریافت Low-Speed (Rx)
+    // --- Low-Speed (BD-CAN) MMS Controls (0x170) ---
+    QCheckBox *m_mmsAutoCheck = nullptr;
+    QCheckBox *m_mmsAcCheck = nullptr;
+    QCheckBox *m_mmsPowerCheck = nullptr;
+    QCheckBox *m_mmsIntakeCheck = nullptr;
+    QCheckBox *m_mmsTempIncCheck = nullptr;
+    QCheckBox *m_mmsTempDecCheck = nullptr;
+    QCheckBox *m_mmsBlowerIncCheck = nullptr;
+    QCheckBox *m_mmsBlowerDecCheck = nullptr;
+    QCheckBox *m_mmsFaceCheck = nullptr;
+    QCheckBox *m_mmsFootCheck = nullptr;
+    QCheckBox *m_mmsScreenCheck = nullptr;
+    QCheckBox *m_mmsDefrostCheck = nullptr;
+    QCheckBox *m_mmsRearHeaterCheck = nullptr;
+    QCheckBox *m_mmsFootFaceCheck = nullptr;
+    QCheckBox *m_mmsFootScreenCheck = nullptr;
+
+    // --- Low-Speed (BD-CAN) BCM Controls ---
+    QComboBox *m_lsVehicleTypeCombo = nullptr;
+
+
+    // --- Low-Speed (BD-CAN) BCM Compressor & Gas Specs (0x1F0) ---
+
+    // --- Low-Speed (BD-CAN) RX Telemetry Table ---
+
+
+    //  Low-Speed (Rx)
     QTableWidget *m_lsRxTable{nullptr};
     QTableWidget *m_lsFaultTable{nullptr};
+
+    void addLogEntry(const QString &dir, uint32_t id, const std::array<uint8_t, 8> &data, uint8_t dlc);
+    QString formatBytes(const std::array<uint8_t, 8> &data, uint8_t dlc, DataFormat format);
+
 };

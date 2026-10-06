@@ -5,6 +5,8 @@ D:/Development/CAN_Test/CANDatabase/ICanMessage.h
 D:/Development/CAN_Test/mainwindow.h
  mmc:Q_OBJECT
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/QLibrary
+ mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/QMap
+ mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/QTime
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/QTimer
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/q17memory.h
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/q20functional.h
@@ -32,6 +34,7 @@ D:/Development/CAN_Test/mainwindow.h
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qbytearrayalgorithms.h
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qbytearraylist.h
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qbytearrayview.h
+ mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qcalendar.h
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qchar.h
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qcheckedint_impl.h
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qcompare.h
@@ -46,6 +49,7 @@ D:/Development/CAN_Test/mainwindow.h
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qcontiguouscache.h
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qdarwinhelpers.h
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qdatastream.h
+ mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qdatetime.h
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qdeadlinetimer.h
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qdebug.h
  mdp:C:/Qt/6.10.2/mingw_64/include/QtCore/qendian.h
