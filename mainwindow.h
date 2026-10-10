@@ -21,7 +21,7 @@
 #include <QTime>
 #include "KT08Database.h"
 #include <QMap>
-// --- ساختارها و تعاریف ControlCAN API ---
+// ---  ControlCAN API ---
 #define VCI_USBCAN1 3
 #define VCI_USBCAN2 4
 
@@ -181,8 +181,6 @@ private:
     // --- Low-Speed (BD-CAN) BCM Controls ---
     QComboBox *m_lsVehicleTypeCombo = nullptr;
 
-
-    // --- Low-Speed (BD-CAN) BCM Compressor & Gas Specs (0x1F0) ---
 
     // --- Low-Speed (BD-CAN) RX Telemetry Table ---
 

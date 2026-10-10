@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setupUi();
 
-    // اتصال تایمرها به اسلات‌های مربوطه
+
     connect(&m_txTimer, &QTimer::timeout, this, &MainWindow::sendCyclicMessages);
     connect(&m_rxTimer, &QTimer::timeout, this, &MainWindow::readCanData);
 }
@@ -30,7 +30,7 @@ void MainWindow::setupUi()
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
     mainLayout->setContentsMargins(8, 8, 8, 8);
 
-    // ۱. ساخت بخش بالا (کنترل‌ها و پنل‌های Tx/Rx)
+
     QWidget *topWidget = new QWidget(this);
     QVBoxLayout *topLayout = new QVBoxLayout(topWidget);
     topLayout->setContentsMargins(0, 0, 0, 0);
@@ -72,24 +72,23 @@ void MainWindow::setupUi()
     m_rxStackedWidget->addWidget(createHighSpeedRxPanel());
     m_rxStackedWidget->addWidget(createLowSpeedRxPanel());
 
-    // ساخت یک ویجت افقی برای قرار دادن TX در چپ و RX در راست
+
     QWidget *panelsWidget = new QWidget(this);
     QHBoxLayout *panelsLayout = new QHBoxLayout(panelsWidget);
     panelsLayout->setContentsMargins(0, 0, 0, 0);
 
-    panelsLayout->addWidget(m_txStackedWidget); // سمت چپ: TX Panel
-    panelsLayout->addWidget(m_rxStackedWidget); // سمت راست: RX Panel
+    panelsLayout->addWidget(m_txStackedWidget); //  TX Panel
+    panelsLayout->addWidget(m_rxStackedWidget); //  RX Panel
 
-    // اضافه کردن به topLayout
+
     topLayout->addWidget(connGroup);
     topLayout->addWidget(panelsWidget);
 
-    // ۲. تعریف Splitter و اضافه کردن پنل بالا و پنل لاگ به آن
+    // Splitter
     QSplitter *mainSplitter = new QSplitter(Qt::Vertical, this);
     mainSplitter->addWidget(topWidget);
-    mainSplitter->addWidget(createLogConsolePanel()); // پنل لاگ در پایین
+    mainSplitter->addWidget(createLogConsolePanel());
 
-    // تنظیم نسبت اولیه (۴۰٪ بخش بالا، ۶۰٪ بخش لاگ)
     mainSplitter->setStretchFactor(0, 4);
     mainSplitter->setStretchFactor(1, 6);
 
@@ -99,7 +98,6 @@ void MainWindow::setupUi()
     setWindowTitle("KT08 HVAC CAN Analyzer");
     resize(850, 900);
 
-    // اعمال استایل سفارشی
     // applyCustomStyle();
 }
 
@@ -245,7 +243,7 @@ QWidget* MainWindow::createLogConsolePanel()
     return logGroup;
 }
 
-// تبدیل آرایه بایت به فرمت Hex یا Binary
+//Hex Binary
 QString MainWindow::formatBytes(const std::array<uint8_t, 8> &data, uint8_t dlc, DataFormat format)
 {
     QStringList result;
@@ -259,7 +257,7 @@ QString MainWindow::formatBytes(const std::array<uint8_t, 8> &data, uint8_t dlc,
     return result.join(" ");
 }
 
-// اضافه کردن یا بروزرسانی لاگ در جدول
+
 void MainWindow::addLogEntry(const QString &dir, uint32_t id, const std::array<uint8_t, 8> &data, uint8_t dlc)
 {
     QString timeStr = QTime::currentTime().toString("hh:mm:ss.z");
@@ -309,7 +307,7 @@ void MainWindow::addLogEntry(const QString &dir, uint32_t id, const std::array<u
     }
 }
 
-// اسلات تغییر فرمت Hex/Binary در ComboBox
+// Hex/Binary ComboBox
 void MainWindow::onDataFormatChanged(int index)
 {
     m_currentDataFormat = static_cast<DataFormat>(m_dataFormatCombo->currentData().toInt());
@@ -423,7 +421,7 @@ QWidget* MainWindow::createLowSpeedTxPanel()
 
     bcmGrid->addWidget(new QLabel("Start Switch:"), row, 2);
     m_lsStartSwitchCombo = new QComboBox(this);
-    m_lsStartSwitchCombo->addItems({"OFF (0)", "ACC (1)", "ON (2)", "CRANK (3)"});
+    m_lsStartSwitchCombo->addItems({"OFF (0)", "ACC (1)", "IGN (2)", "CRANK (3)"});
     bcmGrid->addWidget(m_lsStartSwitchCombo, row, 3);
     row++;
 
@@ -551,6 +549,7 @@ QWidget* MainWindow::createLowSpeedRxPanel()
         "Evaporator Target Temp (°C) [0x086]",
         "Evaporator Actual Temp (°C) [0x086]",
         "AC Request (0x086)",
+        "Rear Defrost Request (0x086)",
         "AC Indicator Status (0x146)",
         "Auto Mode (0x146)",
         "Power State (0x146)",
@@ -559,7 +558,6 @@ QWidget* MainWindow::createLowSpeedRxPanel()
         "Foot Mode (0x146)",
         "Screen Mode (0x146)",
         "Front Screen Defrost (0x146)",
-        "Heater Request (0x146)",
         "Active DTC Fault Code [0x526]"
     };
 
@@ -568,10 +566,9 @@ QWidget* MainWindow::createLowSpeedRxPanel()
         QTableWidgetItem *valItem = new QTableWidgetItem("N/A");
         valItem->setTextAlignment(Qt::AlignCenter);
 
+        //  DTC
         if (i == 15) {
             valItem->setForeground(Qt::red);
-        } else {
-            valItem->setForeground(Qt::white);
         }
 
         m_lsRxTable->setItem(i, 1, valItem);
@@ -713,83 +710,86 @@ void MainWindow::sendCyclicMessages()
 
 void MainWindow::sendLowSpeedCanFrames()
 {
-    // ۱. ارسال فریم MMS_INFO3 (کد 0x170)
-    {
-        std::array<uint8_t, 8> data{};
 
-        if (m_mmsAutoCheck && m_mmsAutoCheck->isChecked())         data[0] |= (1 << 0);
-        if (m_mmsIntakeCheck && m_mmsIntakeCheck->isChecked())     data[0] |= (1 << 1);
-        if (m_mmsFaceCheck && m_mmsFaceCheck->isChecked())         data[0] |= (1 << 2);
-        if (m_mmsFootCheck && m_mmsFootCheck->isChecked())         data[0] |= (1 << 3);
-        if (m_mmsScreenCheck && m_mmsScreenCheck->isChecked())       data[0] |= (1 << 4);
-        if (m_mmsDefrostCheck && m_mmsDefrostCheck->isChecked())     data[0] |= (1 << 5);
-        if (m_mmsRearHeaterCheck && m_mmsRearHeaterCheck->isChecked()) data[0] |= (1 << 6);
-        if (m_mmsPowerCheck && m_mmsPowerCheck->isChecked())       data[0] |= (1 << 7);
 
-        if (m_mmsAcCheck && m_mmsAcCheck->isChecked())             data[1] |= (1 << 0);
-        if (m_mmsTempIncCheck && m_mmsTempIncCheck->isChecked())   data[1] |= (1 << 1);
-        if (m_mmsTempDecCheck && m_mmsTempDecCheck->isChecked())   data[1] |= (1 << 2);
-        if (m_mmsBlowerIncCheck && m_mmsBlowerIncCheck->isChecked()) data[1] |= (1 << 3);
-        if (m_mmsBlowerDecCheck && m_mmsBlowerDecCheck->isChecked()) data[1] |= (1 << 4);
-        if (m_mmsFootFaceCheck && m_mmsFootFaceCheck->isChecked())  data[1] |= (1 << 5);
-        if (m_mmsFootScreenCheck && m_mmsFootScreenCheck->isChecked()) data[1] |= (1 << 6);
+        // MMS_INFO3 (0x170)
+        {
+            std::array<uint8_t, 8> data{};
 
-        sendCanFrame(0x170, data, 8);
-    }
+            if (m_mmsAutoCheck && m_mmsAutoCheck->isChecked())         data[0] |= (1 << 0);
+            if (m_mmsIntakeCheck && m_mmsIntakeCheck->isChecked())     data[0] |= (1 << 1);
+            if (m_mmsFaceCheck && m_mmsFaceCheck->isChecked())         data[0] |= (1 << 2);
+            if (m_mmsFootCheck && m_mmsFootCheck->isChecked())         data[0] |= (1 << 3);
+            if (m_mmsScreenCheck && m_mmsScreenCheck->isChecked())       data[0] |= (1 << 4);
+            if (m_mmsDefrostCheck && m_mmsDefrostCheck->isChecked())     data[0] |= (1 << 5);
+            if (m_mmsRearHeaterCheck && m_mmsRearHeaterCheck->isChecked()) data[0] |= (1 << 6);
+            if (m_mmsPowerCheck && m_mmsPowerCheck->isChecked())       data[0] |= (1 << 7);
 
-    // ۲. ارسال فریم BCM_INFO2 (کد 0x088)
-    {
-        std::array<uint8_t, 8> data{};
+            if (m_mmsAcCheck && m_mmsAcCheck->isChecked())             data[1] |= (1 << 0);
+            if (m_mmsTempIncCheck && m_mmsTempIncCheck->isChecked())   data[1] |= (1 << 1);
+            if (m_mmsTempDecCheck && m_mmsTempDecCheck->isChecked())   data[1] |= (1 << 2);
+            if (m_mmsBlowerIncCheck && m_mmsBlowerIncCheck->isChecked()) data[1] |= (1 << 3);
+            if (m_mmsBlowerDecCheck && m_mmsBlowerDecCheck->isChecked()) data[1] |= (1 << 4);
+            if (m_mmsFootFaceCheck && m_mmsFootFaceCheck->isChecked())  data[1] |= (1 << 5);
+            if (m_mmsFootScreenCheck && m_mmsFootScreenCheck->isChecked()) data[1] |= (1 << 6);
 
-        uint8_t vehType = m_lsVehicleTypeCombo ? m_lsVehicleTypeCombo->currentIndex() : 0;
-        uint8_t engState = m_lsEngineStateCombo ? m_lsEngineStateCombo->currentIndex() : 0;
-        uint8_t startSw = m_lsStartSwitchCombo ? m_lsStartSwitchCombo->currentIndex() : 0;
-
-        data[0] |= (vehType & 0x01);
-        data[1] |= (engState & 0x03);
-        data[1] |= ((startSw & 0x03) << 2);
-        data[1] |= (0x0A << 4); // Speed Validity = Valid
-
-        double speed = m_lsVehicleSpeedSpin ? m_lsVehicleSpeedSpin->value() : 0.0;
-        uint16_t speedRaw = static_cast<uint16_t>(speed / 0.125);
-        data[4] = speedRaw & 0xFF;
-        data[5] = (speedRaw >> 8) & 0x0F;
-
-        sendCanFrame(0x088, data, 8);
-    }
-
-    // ۳. ارسال فریم BCM_INFO4 (کد 0x0C8)
-    {
-        std::array<uint8_t, 8> data{};
-
-        if (m_lsAcStateCheck && m_lsAcStateCheck->isChecked())         data[0] |= (1 << 6);
-        if (m_lsRearHeaterCheck && m_lsRearHeaterCheck->isChecked()) data[0] |= (1 << 7);
-
-        double waterTemp = m_lsWaterTempSpin ? m_lsWaterTempSpin->value() : 85.0;
-        uint8_t waterTempRaw = static_cast<uint8_t>((waterTemp - (-48.0)) / 0.75);
-        data[1] = waterTempRaw;
-
-        sendCanFrame(0x0C8, data, 8);
-    }
-
-    // ۴. ارسال فریم BCM_INFO19 (کد 0x1F0)
-    {
-        std::array<uint8_t, 8> data{};
-
-        uint16_t compRpm = m_lsCompressorRpmSpin ? m_lsCompressorRpmSpin->value() : 0;
-        data[0] = static_cast<uint8_t>(compRpm / 50);
-
-        data[2] = static_cast<uint8_t>(m_lsOutGasPressureSpin ? m_lsOutGasPressureSpin->value() : 0);
-        data[3] = static_cast<uint8_t>(m_lsInGasPressureSpin ? m_lsInGasPressureSpin->value() : 0);
-        data[4] = static_cast<uint8_t>((m_lsOutGasTempSpin ? m_lsOutGasTempSpin->value() : 0) + 40);
-        data[5] = static_cast<uint8_t>((m_lsInGasTempSpin ? m_lsInGasTempSpin->value() : 0) + 40);
-
-        if (m_lsShutOffValveCheck && m_lsShutOffValveCheck->isChecked()) {
-            data[6] |= (1 << 0);
+            sendCanFrame(0x170, data, 8);
         }
 
-        sendCanFrame(0x1F0, data, 8);
-    }
+        // BCM_INFO2 ( 0x088)
+        {
+            std::array<uint8_t, 8> data{};
+
+            uint8_t vehType = m_lsVehicleTypeCombo ? m_lsVehicleTypeCombo->currentIndex() : 0;
+            uint8_t engState = m_lsEngineStateCombo ? m_lsEngineStateCombo->currentIndex() : 0;
+            uint8_t startSw = m_lsStartSwitchCombo ? m_lsStartSwitchCombo->currentIndex() : 0;
+
+            data[0] |= (vehType & 0x01);
+            data[1] |= (engState & 0x03);
+            data[1] |= ((startSw & 0x03) << 2);
+            data[1] |= (0x0A << 4); // Speed Validity = Valid
+
+            double speed = m_lsVehicleSpeedSpin ? m_lsVehicleSpeedSpin->value() : 0.0;
+            uint16_t speedRaw = static_cast<uint16_t>(speed / 0.125);
+            data[4] = speedRaw & 0xFF;
+            data[5] = (speedRaw >> 8) & 0x0F;
+
+            sendCanFrame(0x088, data, 8);
+        }
+
+        // BCM_INFO4 ( 0x0C8)
+        {
+            std::array<uint8_t, 8> data{};
+
+            if (m_lsAcStateCheck && m_lsAcStateCheck->isChecked())         data[0] |= (1 << 6);
+            if (m_lsRearHeaterCheck && m_lsRearHeaterCheck->isChecked()) data[0] |= (1 << 7);
+
+            double waterTemp = m_lsWaterTempSpin ? m_lsWaterTempSpin->value() : 85.0;
+            uint8_t waterTempRaw = static_cast<uint8_t>((waterTemp - (-48.0)) / 0.75);
+            data[1] = waterTempRaw;
+
+            sendCanFrame(0x0C8, data, 8);
+        }
+
+        //BCM_INFO19 (0x1F0)
+        {
+            std::array<uint8_t, 8> data{};
+
+            uint16_t compRpm = m_lsCompressorRpmSpin ? m_lsCompressorRpmSpin->value() : 0;
+            data[0] = static_cast<uint8_t>(compRpm / 50);
+
+            data[2] = static_cast<uint8_t>(m_lsOutGasPressureSpin ? m_lsOutGasPressureSpin->value() : 0);
+            data[3] = static_cast<uint8_t>(m_lsInGasPressureSpin ? m_lsInGasPressureSpin->value() : 0);
+            data[4] = static_cast<uint8_t>((m_lsOutGasTempSpin ? m_lsOutGasTempSpin->value() : 0) + 40);
+            data[5] = static_cast<uint8_t>((m_lsInGasTempSpin ? m_lsInGasTempSpin->value() : 0) + 40);
+
+            if (m_lsShutOffValveCheck && m_lsShutOffValveCheck->isChecked()) {
+                data[6] |= (1 << 0);
+            }
+
+            sendCanFrame(0x1F0, data, 8);
+        }
+
 }
 
 void MainWindow::sendCanFrame(uint32_t id, const std::array<uint8_t, 8>& data, uint8_t dlc)
@@ -802,7 +802,7 @@ void MainWindow::sendCanFrame(uint32_t id, const std::array<uint8_t, 8>& data, u
     sendFrame.DataLen = dlc;
 
     if (m_db.busType() == CanBusType::LowSpeed) {
-        sendFrame.ExternFlag = 0; // 1 Extended 29-bit ID
+        sendFrame.ExternFlag = 0; // 1 Extended 29-bit ID (WE HAVE 11-bit ID )
         sendFrame.RemoteFlag = 0;
     } else {
         sendFrame.ExternFlag = 0; // 0 Standard 11-bit ID
@@ -856,46 +856,48 @@ void MainWindow::processReceivedFrame(uint32_t id, const std::array<uint8_t, 8>&
     }
     // --- Low-Speed Decoding ---
     else if (m_db.busType() == CanBusType::LowSpeed) {
-        if (id == 0x086) { // HVAC_INFO
+        if (id == 0x086) { // HVAC_INFO (Evaporator & Requests)[cite: 2]
             double evapTarget = (data[0] * 0.5) - 20.0;
-            double evapActual = (data[1] * 0.5) - 20.0;
-            bool acReq = (data[5] & 0x01);
+                double evapActual = (data[1] * 0.5) - 20.0;
+                bool acReq = (data[5] & 0x01);
+                bool rearDefrostReq = (data[5] & 0x02);
 
-            m_lsRxTable->item(3, 1)->setText(QString::number(evapTarget, 'f', 1) + " °C");
-            m_lsRxTable->item(4, 1)->setText(QString::number(evapActual, 'f', 1) + " °C");
-            m_lsRxTable->item(5, 1)->setText(acReq ? "ON" : "OFF");
+                m_lsRxTable->item(3, 1)->setText(data[0] == 0xFE ? "Not Available" : QString::number(evapTarget, 'f', 1) + " °C");
+                m_lsRxTable->item(4, 1)->setText(data[1] == 0xFE ? "Not Available" : QString::number(evapActual, 'f', 1) + " °C");
+                m_lsRxTable->item(5, 1)->setText(acReq ? "ON" : "OFF");
+                m_lsRxTable->item(6, 1)->setText(rearDefrostReq ? "ON" : "OFF");
         }
-        else if (id == 0x146) { // HVAC_INFO2
-            bool autoMode = (data[0] & 0x01);
-            bool intakePattern = (data[0] & 0x02);
-            bool faceMode = (data[0] & 0x04);
-            bool footMode = (data[0] & 0x08);
-            bool screenMode = (data[0] & 0x10);
-            bool defrostState = (data[0] & 0x20);
-            bool powerState = (data[0] & 0x40);
-            bool acIndicator = (data[0] & 0x80);
+        else if (id == 0x146) { // HVAC_INFO2 (Modes, Temp, Blower)
+            bool autoMode       = (data[0] & 0x01);
+            bool intakePattern  = (data[0] & 0x02);
+            bool faceMode       = (data[0] & 0x04);
+            bool footMode       = (data[0] & 0x08);
+            bool screenMode     = (data[0] & 0x10);
+            bool defrostState   = (data[0] & 0x20);
+            bool powerState     = (data[0] & 0x40);
+            bool acIndicator    = (data[0] & 0x80);
 
-            double tempSet = (data[1] * 0.5) + 16.0;
-            bool heaterReq = (data[1] & 0x40);
+            uint8_t tempRaw     = data[1] & 0x3F;
+            double tempSet      = (tempRaw * 0.5) + 16.0;
+                bool heaterReq      = (data[1] & 0x40);
             uint8_t blowerSpeed = data[2] & 0x0F;
-            double cabinTemp = (data[3] * 0.5) - 40.0;
+                double cabinTemp    = (data[3] * 0.5) - 40.0;
 
-            m_lsRxTable->item(0, 1)->setText(QString::number(cabinTemp, 'f', 1) + " °C");
-            m_lsRxTable->item(1, 1)->setText(QString::number(tempSet, 'f', 1) + " °C");
+            m_lsRxTable->item(0, 1)->setText(data[3] == 0xFF ? "Invalid" : QString::number(cabinTemp, 'f', 1) + " °C");
+            m_lsRxTable->item(1, 1)->setText(tempRaw == 0x3F ? "Invalid" : QString::number(tempSet, 'f', 1) + " °C");
             m_lsRxTable->item(2, 1)->setText("Level " + QString::number(blowerSpeed));
-            m_lsRxTable->item(6, 1)->setText(acIndicator ? "ON" : "OFF");
-            m_lsRxTable->item(7, 1)->setText(autoMode ? "ON" : "OFF");
-            m_lsRxTable->item(8, 1)->setText(powerState ? "ON" : "OFF");
-            m_lsRxTable->item(9, 1)->setText(intakePattern ? "Outer (Recirc OFF)" : "Inner (Recirc ON)");
-            m_lsRxTable->item(10, 1)->setText(faceMode ? "ON" : "OFF");
-            m_lsRxTable->item(11, 1)->setText(footMode ? "ON" : "OFF");
-            m_lsRxTable->item(12, 1)->setText(screenMode ? "ON" : "OFF");
-            m_lsRxTable->item(13, 1)->setText(defrostState ? "ON" : "OFF");
-            m_lsRxTable->item(14, 1)->setText(heaterReq ? "ON" : "OFF");
+            m_lsRxTable->item(7, 1)->setText(acIndicator ? "ON" : "OFF");
+            m_lsRxTable->item(8, 1)->setText(autoMode ? "ON" : "OFF");
+            m_lsRxTable->item(9, 1)->setText(powerState ? "ON" : "OFF");
+            m_lsRxTable->item(10, 1)->setText(intakePattern ? "Outer (Recirc OFF)" : "Inner (Recirc ON)");
+            m_lsRxTable->item(11, 1)->setText(faceMode ? "ON" : "OFF");
+            m_lsRxTable->item(12, 1)->setText(footMode ? "ON" : "OFF");
+            m_lsRxTable->item(13, 1)->setText(screenMode ? "ON" : "OFF");
+            m_lsRxTable->item(14, 1)->setText(defrostState ? "ON" : "OFF");
         }
-        else if (id == 0x526) { // HVAC_FLT
+        else if (id == 0x526) { // HVAC_FLT (Diagnostic Fault Code)
             uint32_t dtc = (data[1] << 16) | (data[2] << 8) | data[3];
-            m_lsRxTable->item(15, 1)->setText(dtc == 0 ? "No Fault" : QString("DTC: 0x%1").arg(dtc, 6, 16, QChar('0')).toUpper());
+                m_lsRxTable->item(15, 1)->setText(dtc == 0 ? "No Fault" : QString("DTC: 0x%1").arg(dtc, 6, 16, QChar('0')).toUpper());
         }
     }
 }
